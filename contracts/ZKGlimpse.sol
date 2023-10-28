@@ -1,4 +1,3 @@
-//SPDX-License-Identifier: MIT
 pragma solidity >=0.8.19;
 
 import {UltraVerifier} from '../circuits/contract/circuit/plonk_vk.sol';
@@ -7,36 +6,52 @@ contract zkGlimpse {
 
     UltraVerifier verifier;
 
-    struct BinaryQuestion {
-        string question_string;
-        uint response;
+    struct MaskingKey {
+        uint256 PubKey_X;
+        uint256 PubKey_Y;
+        uint32[] ZKP;
     }
 
-    // Proposal cd
-    
+    struct BinaryQuestion {
+        string question_string;
+    }
+
+    /* START META INFORMATION */
+
     // STUDY_NAME
-    string constant study_name = "";
-    // END
+    string constant STUDY_NAME = "My Study";
 
     // STUDY_DESC
-    string constant study_description = "";
-    // END
+    string constant STUDY_DESC = "Description of study.";
 
-    // HYP_DESC
-    string constant hypothesis_description = "";
-    // END
+    // HYPOTHESIS_DESC
+    string constant HYPOTHESIS_DESC = "Hypothesis of study.";
+
+    // PARTICIPANT_MERKLE_ROOT
+    uint256 constant PARTICIPANT_MERKLE_ROOT = 0x00000000;
 
     // ANALYSIS_DESC
-    string constant analysis_description = "";
-    // END
+    string constant ANALYSIS_DESC = "Analysis description.";
 
-    // DEADLINE
-    uint constant deadline = 0;
-    // END
+    // VOTING_VOTING_DEADLINE
+    uint constant VOTING_DEADLINE = 1635551999;
 
     // QUESTIONS
-    BinaryQuestion[3] questions;
-    // END 
+    BinaryQuestion[] public BinaryQuestions = [
+        BinaryQuestion("Question 1?"),
+        BinaryQuestion("Question 2?")
+    ];
+
+    // MASKING_KEYS
+    uint32[] ZKP0 = [uint32(0x100), uint32(0x100)];
+    uint32[] ZKP1 = [uint32(0x100), uint32(0x100)];
+
+    MaskingKey[] public MaskingKeys = [
+        MaskingKey(uint256(0x100), uint256(0x100), ZKP0),
+        MaskingKey(uint256(0x100), uint256(0x100), ZKP1)
+    ];
+
+    /* END META INFORMATION */
 
     bytes32 merkleRoot;
     mapping(bytes32 hash => bool isNullified) nullifiers;
@@ -66,7 +81,7 @@ contract zkGlimpse {
         bytes32 nullifierHash 
     ) public returns (bool) {
         require(!nullifiers[nullifierHash], "Proof has been already submitted");
-        require(block.timestamp < deadline, "Response period is over.");
+        require(block.timestamp < VOTING_DEADLINE, "Response period is over.");
         nullifiers[nullifierHash] = true;
 
         bytes32[] memory publicInputs = new bytes32[](73);
