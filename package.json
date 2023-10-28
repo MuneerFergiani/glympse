@@ -14,9 +14,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aztec/bb.js": "^0.8.14",
     "@noir-lang/backend_barretenberg": "^0.18.0",
     "@noir-lang/noir_js": "^0.18.0",
-    "@aztec/bb.js": "^0.8.14",
     "@noir-lang/types": "nightly",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "1.0.0",
@@ -42,7 +42,7 @@
     "@types/node": "^18.15.5",
     "@types/react": "^18.0.26",
     "chai": "^4.3.10",
-    "ethers": "^5.4.7",
+    "ethers": "^6.8.0",
     "typescript": "^5.0.0"
   },
   "packageManager": "yarn@3.6.4"
