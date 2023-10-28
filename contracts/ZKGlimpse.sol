@@ -1,9 +1,8 @@
 pragma solidity >=0.8.19;
 
-import {UltraVerifier} from '../circuits/contract/circuit/plonk_vk.sol';
+import {UltraVerifier} from "../circuits/contract/circuit/plonk_vk.sol";
 
 contract zkGlimpse {
-
     UltraVerifier verifier;
 
     struct MaskingKey {
@@ -37,19 +36,13 @@ contract zkGlimpse {
     uint constant VOTING_DEADLINE = 1635551999;
 
     // QUESTIONS
-    BinaryQuestion[] public BinaryQuestions = [
-        BinaryQuestion("Question 1?"),
-        BinaryQuestion("Question 2?")
-    ];
+    BinaryQuestion[] public BinaryQuestions;
 
     // MASKING_KEYS
     uint32[] ZKP0 = [uint32(0x100), uint32(0x100)];
     uint32[] ZKP1 = [uint32(0x100), uint32(0x100)];
 
-    MaskingKey[] public MaskingKeys = [
-        MaskingKey(uint256(0x100), uint256(0x100), ZKP0),
-        MaskingKey(uint256(0x100), uint256(0x100), ZKP1)
-    ];
+    MaskingKey[] public MaskingKeys ;
 
     /* END META INFORMATION */
 
@@ -59,26 +52,32 @@ contract zkGlimpse {
     constructor(bytes32 _merkleRoot, address _verifier) {
         merkleRoot = _merkleRoot;
         verifier = UltraVerifier(_verifier);
+        BinaryQuestions.push(BinaryQuestion("Question 1?"));
+        BinaryQuestions.push(BinaryQuestion("Question 2?"));    
+        MaskingKeys.push( MaskingKey(uint256(0x100), uint256(0x100), ZKP0));
+        MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
     }
 
     function preparePublicInputs(
         bytes32[] memory _publicInputs,
         bytes32[] memory publicInput,
-        uint256 offset) 
-        private pure returns (bytes32[] memory) {
+        uint256 offset
+    ) private pure returns (bytes32[] memory) {
         for (uint k = 0; k < publicInput.length; k++) {
             for (uint256 i = 0; i < 32; i++) {
-                _publicInputs[i + offset] = (publicInput[k] >> ((31 - i) * 8)) & bytes32(uint256(0xFF));
+                _publicInputs[i + offset] =
+                    (publicInput[k] >> ((31 - i) * 8)) &
+                    bytes32(uint256(0xFF));
             } // TODO not cool, padding 31 bytes with 0s
         }
         return _publicInputs;
     }
 
     function verifyResponse(
-        bytes calldata proof, 
-        bytes32[] calldata unhashed_partial_decryption_key,  //64 bytes
-        bytes32[] calldata responseValue,  // 8 bytes
-        bytes32 nullifierHash 
+        bytes calldata proof,
+        bytes32[] calldata unhashed_partial_decryption_key, //64 bytes
+        bytes32[] calldata responseValue, // 8 bytes
+        bytes32 nullifierHash
     ) public returns (bool) {
         require(!nullifiers[nullifierHash], "Proof has been already submitted");
         require(block.timestamp < VOTING_DEADLINE, "Response period is over.");
@@ -86,7 +85,11 @@ contract zkGlimpse {
 
         bytes32[] memory publicInputs = new bytes32[](73);
 
-        publicInputs = preparePublicInputs(publicInputs, unhashed_partial_decryption_key, 0);
+        publicInputs = preparePublicInputs(
+            publicInputs,
+            unhashed_partial_decryption_key,
+            0
+        );
         publicInputs = preparePublicInputs(publicInputs, responseValue, 64);
         publicInputs[72] = merkleRoot;
 
