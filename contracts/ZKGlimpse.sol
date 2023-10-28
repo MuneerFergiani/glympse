@@ -35,12 +35,10 @@ contract zkGlimpse {
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = 1635551999;
 
-    // QUESTIONS
     BinaryQuestion[] public BinaryQuestions;
-
-    // MASKING_KEYS
-    uint32[] ZKP0 = [uint32(0x100), uint32(0x100)];
-    uint32[] ZKP1 = [uint32(0x100), uint32(0x100)];
+            
+    uint32[] ZKP0;
+    uint32[] ZKP1;
 
     MaskingKey[] public MaskingKeys ;
 
@@ -52,8 +50,16 @@ contract zkGlimpse {
     constructor(bytes32 _merkleRoot, address _verifier) {
         merkleRoot = _merkleRoot;
         verifier = UltraVerifier(_verifier);
+        
+        // QUESTIONS
         BinaryQuestions.push(BinaryQuestion("Question 1?"));
-        BinaryQuestions.push(BinaryQuestion("Question 2?"));    
+        BinaryQuestions.push(BinaryQuestion("Question 2?"));
+        
+        // MASKING_KEYS
+        ZKP0.push(uint32(0x100));
+        ZKP0.push(uint32(0x100));
+        ZKP1.push(uint32(0x100));
+        ZKP1.push(uint32(0x100));
         MaskingKeys.push( MaskingKey(uint256(0x100), uint256(0x100), ZKP0));
         MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
     }
