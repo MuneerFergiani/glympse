@@ -27,6 +27,9 @@ contract zkGlimpse {
     // HYPOTHESIS_DESC
     string constant HYPOTHESIS_DESC = "Hypothesis of study.";
 
+    // PARTICIPANT_MERKLE_ROOT
+    uint256 constant PARTICIPANT_MERKLE_ROOT = 0x00000000;
+
     // ANALYSIS_DESC
     string constant ANALYSIS_DESC = "Analysis description.";
 

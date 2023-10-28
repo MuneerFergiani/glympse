@@ -5,6 +5,7 @@ def format_json(input_json):
     study_desc = input_json.get('STUDY_DESC', '')
     hypothesis_desc = input_json.get('HYPOTHESIS_DESC', '')
     analysis_desc = input_json.get('ANALYSIS_DESC', '')
+    participant_merkle_root = input_json.get('PARTICIPANT_MERKLE_ROOT', '0x0000')
     voting_deadline = input_json.get('VOTING_DEADLINE', 0)
     binary_questions = input_json.get('BINARY_QUESTIONS', [])
     masking_keys = input_json.get('MASKING_KEYS', [])
@@ -21,6 +22,9 @@ def format_json(input_json):
 
     // ANALYSIS_DESC
     string constant ANALYSIS_DESC = "{analysis_desc}";
+
+    // PARTICIPANT_MERKLE_ROOT
+    uint256 constant PARTICIPANT_MERKLE_ROOT = {participant_merkle_root};
 
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = {voting_deadline};
@@ -83,6 +87,7 @@ if __name__ == "__main__":
         "ANALYSIS_DESC": "Analysis description.",
         "VOTING_DEADLINE": 1635551999,
         "BINARY_QUESTIONS": ["Question 1?", "Question 2?"],
+        "PARTICIPANT_MERKLE_ROOT": "0x000000000000000000000000", 
         "MASKING_KEYS": [
             {
                 "PubKey_X": "0x100",
