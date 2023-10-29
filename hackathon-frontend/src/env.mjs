@@ -13,6 +13,15 @@ export const env = createEnv({
    * Will throw if you access these variables on the client.
    */
   server: {
+    STUDY_CONFIRMATION_WINDOW_HOURS: z
+      .string()
+      .regex(/^[0-9]+?$/, "Please enter a number, not text")
+      .transform((arg) => parseFloat(arg))
+      .refine((arg) => arg > 0, "Please enter a number more than 0")
+      .refine(
+        (arg) => arg <= 100_000_000,
+        "Please enter a number less than 100,000,000",
+      ),
     INTERNAL_HOSTNAME: z.string().url().optional(),
     PORT: z
       .string()
@@ -38,6 +47,8 @@ export const env = createEnv({
    * Destructure client variables
    */
   runtimeEnv: {
+    STUDY_CONFIRMATION_WINDOW_HOURS:
+      process.env.STUDY_CONFIRMATION_WINDOW_HOURS,
     INTERNAL_HOSTNAME: process.env.INTERNAL_HOSTNAME,
     PORT: process.env.PORT,
     NEXT_PUBLIC_GLIMPSE_URL: process.env.NEXT_PUBLIC_GLIMPSE_URL,

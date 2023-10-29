@@ -47,20 +47,16 @@ export interface HomeProps {}
 
 const Home: LayoutPage = () => {
   const { account } = useContext(AppContext);
-  const { confirmed } = useStudyStore();
-  const getStudiesToJoin = trpc.getStudiesToJoin.useQuery({
-    account,
-  });
-  const getStudiesToConfirm = trpc.getStudiesToConfirm.useQuery({ account });
+  const studyStore = useStudyStore();
 
   return (
-    <div className="w-full h-full overflow-clip lg:px-16">
-      <ScrollArea className="w-full h-full min-h-0 px-6">
-        <div className="w-full h-full my-16 gap-16 flex flex-col ">
-          {/* Browse studies section */}
-          <section className="flex flex-col gap-6 h-fit">
+    <div className="w-full h-full px-6 py-2 overflow-clip lg:px-16">
+      <ScrollArea className="w-full h-full min-h-0">
+        <div className="w-full h-full px-2 py-2 flex flex-col ">
+          {/* Your studies section */}
+          <section className="flex flex-col gap-8 h-fit">
             <div>
-              <h1 className="text-4xl leading-tight font-semibold mb-4">
+              <h1 className="text-5xl leading-[64px] font-medium mt-8">
                 Your Studies
               </h1>
               <p className=" text-lg">
@@ -74,20 +70,12 @@ const Home: LayoutPage = () => {
 
             {/* Condirmation section */}
             <div>
-              <h1 className="text-2xl font-medium mb-4">
+              <h1 className="text-3xl font-medium mb-4">
                 Awaiting Your Confirmation
               </h1>
-              {getStudiesToConfirm.data &&
-              getStudiesToConfirm.data.length > 0 ? (
-                <ul className="flex flex-col gap-4">
-                  {getStudiesToConfirm.data
-                    ?.filter((study) => !confirmed.includes(study.id))
-                    .map((study, index) => (
-                      <li key={index}>
-                        <ConfirmStudyForm study={study} />
-                      </li>
-                    ))}
-                </ul>
+
+              {studyStore.study.state === "confirming" ? (
+                <ConfirmStudyForm study={studyStore.study.study} />
               ) : (
                 <div className="text-4xl text-center text-muted-foreground">
                   There are no studies you can currently confirm...
@@ -97,19 +85,23 @@ const Home: LayoutPage = () => {
 
             {/* Voting section */}
             <div>
-              <h1 className="text-2xl font-medium mb-4">Ready to Vote</h1>
-              <ul className="flex flex-col gap-4">
-                <CardComponent />
-                <CardComponent />
-                <CardComponent />
-              </ul>
+              <h1 className="text-3xl font-medium mb-4">Ready to Vote</h1>
+              {studyStore.study.state === "voting" ? (
+                <SubmitAnswersForm study={studyStore.study.study} />
+              ) : (
+                <div className="text-4xl text-center text-muted-foreground">
+                  There are no studies you can currently confirm...
+                </div>
+              )}
             </div>
           </section>
 
           {/* Join a study section */}
           <section className="flex flex-col gap-8 h-fit">
             <div>
-              <h1 className="text-4xl font-semibold mb-4">Join a Study</h1>
+              <h1 className="text-5xl leading-[64px] font-medium mt-8">
+                Join a Study
+              </h1>
               <p className=" text-lg">
                 You are free to participate in any of the given studies, so long
                 as you meet the study criterion. Your responses will be
@@ -118,17 +110,11 @@ const Home: LayoutPage = () => {
               </p>
             </div>
 
-            {getStudiesToJoin.data && getStudiesToJoin.data.length > 0 ? (
-              <ul className="flex flex-col gap-4">
-                {getStudiesToJoin.data?.map((study, index) => (
-                  <li key={index}>
-                    <JoinStudyForm study={study} />
-                  </li>
-                ))}
-              </ul>
+            {studyStore.study.state === "onboarding" ? (
+              <JoinStudyForm study={studyStore.study.study} />
             ) : (
               <div className="text-4xl text-center text-muted-foreground">
-                There are no studies you can currently join...
+                There are no studies you can currently confirm...
               </div>
             )}
           </section>
@@ -143,27 +129,22 @@ function JoinStudyForm({
   study,
 }: {
   study: {
-    id: number;
     studyName: string;
     studyDescription: string;
     studyHypothesis: string;
     dataAnalysisMethod: string;
-    questions: {
-      id: number;
+    surveyQuestions: {
       question: string;
     }[];
     minimumParticipants: number;
     maximumParticipants: number;
-    createdUnixTimestamp: number;
-    expiryUnixTimestamp: number;
-    tags: string[];
-    proposingAccountId: number;
+    tags: { tag: string }[];
   };
 }) {
   // hooks
   const [open, setOpen] = useState(false);
   const { loginState } = useLoginStore();
-  const useJoinStudy = trpc.joinStudy.useMutation();
+  const { joinStudy } = useStudyStore();
   const router = useRouter();
 
   // handle cancel
@@ -174,10 +155,7 @@ function JoinStudyForm({
   // handle submitting
   async function onJoin() {
     // send to server
-    useJoinStudy.mutate({
-      account: (loginState.loggedIn && loginState.account) || "",
-      studyProposalId: study.id,
-    });
+    joinStudy();
 
     // on success
     setOpen(false);
@@ -188,41 +166,31 @@ function JoinStudyForm({
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Card button */}
       <DialogTrigger asChild>
-        <Card className="flex flex-col gap-2 min-w-fit h-fit py-4 px-6 bg-secondary shadow-md">
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
           <div className="flex justify-between items-center w-full h-fit ">
-            <h3 className="text-lg leading-tight font-medium">
-              {study.studyName}
-            </h3>
-            <ChevronRightIcon className="w-6 h-6 stroke-muted-foreground" />
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
           </div>
-          <p className="pb-2">{study.studyDescription}</p>
-          <div className="flex w-full min-w-fit h-6 gap-2.5">
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
             {study.tags?.[0] ? (
               <Badge className="bg-orange-400 hover:bg-orange-400">
-                {study.tags[0]}
+                {study.tags[0].tag}
               </Badge>
             ) : null}
             {study.tags?.[1] ? (
               <Badge className="bg-purple-500 hover:bg-purple-500">
-                {study.tags[1]}
+                {study.tags[1].tag}
               </Badge>
             ) : null}
             {study.tags?.[2] ? (
               <Badge className="g-blue-600 hover:bg-blue-600">
-                {study.tags[2]}
+                {study.tags[2].tag}
               </Badge>
             ) : null}
 
             {/* Separator */}
             <span className="flex-1" />
-
-            <Badge className="min-w-fit" variant="destructive">
-              <AlarmClockIcon className="w-4 mr-2" />
-              {Math.floor(
-                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
-              )}{" "}
-              Hours To Join
-            </Badge>
           </div>
         </Card>
       </DialogTrigger>
@@ -245,16 +213,6 @@ function JoinStudyForm({
                 <p>
                   N = {study.minimumParticipants} to {study.maximumParticipants}
                 </p>
-                <p>
-                  Created: {new Date(study.createdUnixTimestamp).toDateString()}
-                </p>
-                <p>
-                  Expiring in{" "}
-                  {Math.floor(
-                    (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
-                  )}{" "}
-                  hours
-                </p>
               </div>
               <p className="mt-1">{study.studyDescription}</p>
             </div>
@@ -268,7 +226,7 @@ function JoinStudyForm({
             </div>
             <div>
               <h3 className="text-lg font-bold">Questions</h3>
-              {study.questions.map((q, i) => (
+              {study.surveyQuestions.map((q, i) => (
                 <p key={i} className="mt-1">
                   {q.question}
                 </p>
@@ -301,27 +259,22 @@ function ConfirmStudyForm({
   study,
 }: {
   study: {
-    id: number;
     studyName: string;
     studyDescription: string;
     studyHypothesis: string;
     dataAnalysisMethod: string;
-    questions: {
-      id: number;
+    surveyQuestions: {
       question: string;
     }[];
     minimumParticipants: number;
     maximumParticipants: number;
-    createdUnixTimestamp: number;
-    expiryUnixTimestamp: number;
-    tags: string[];
-    proposingAccountId: number;
+    tags: { tag: string }[];
   };
 }) {
   // hooks
   const [open, setOpen] = useState(false);
   const { loginState } = useLoginStore();
-  const { addConfirmed } = useStudyStore();
+  const { confirmStudy } = useStudyStore();
   const router = useRouter();
 
   // handle cancel
@@ -332,14 +285,8 @@ function ConfirmStudyForm({
   // handle submitting
   async function onConfirm() {
     // send to server
-    // TODO: impl confirmation logic
-    // useJoinStudy.mutate({
-    //   account: (loginState.loggedIn && loginState.account) || "",
-    //   studyProposalId: study.id,
-    // });
-
+    confirmStudy();
     // on success
-    addConfirmed(study.id);
     setOpen(false);
     router.reload();
   }
@@ -348,41 +295,31 @@ function ConfirmStudyForm({
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Card button */}
       <DialogTrigger asChild>
-        <Card className="flex flex-col gap-2 min-w-fit h-fit py-4 px-6 bg-secondary shadow-md">
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
           <div className="flex justify-between items-center w-full h-fit ">
-            <h3 className="text-lg leading-tight font-medium">
-              {study.studyName}
-            </h3>
-            <ChevronRightIcon className="w-6 h-6 stroke-muted-foreground" />
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
           </div>
-          <p className="pb-2">{study.studyDescription}</p>
-          <div className="flex w-full min-w-fit h-6 gap-2.5">
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
             {study.tags?.[0] ? (
               <Badge className="bg-orange-400 hover:bg-orange-400">
-                {study.tags[0]}
+                {study.tags[0].tag}
               </Badge>
             ) : null}
             {study.tags?.[1] ? (
               <Badge className="bg-purple-500 hover:bg-purple-500">
-                {study.tags[1]}
+                {study.tags[1].tag}
               </Badge>
             ) : null}
             {study.tags?.[2] ? (
               <Badge className="g-blue-600 hover:bg-blue-600">
-                {study.tags[2]}
+                {study.tags[2].tag}
               </Badge>
             ) : null}
 
             {/* Separator */}
             <span className="flex-1" />
-
-            <Badge className="min-w-fit" variant="destructive">
-              <AlarmClockIcon className="w-4 mr-2" />
-              {Math.floor(
-                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
-              )}{" "}
-              Hours To Confirm
-            </Badge>
           </div>
         </Card>
       </DialogTrigger>
@@ -405,16 +342,6 @@ function ConfirmStudyForm({
                 <p>
                   N = {study.minimumParticipants} to {study.maximumParticipants}
                 </p>
-                <p>
-                  Created: {new Date(study.createdUnixTimestamp).toDateString()}
-                </p>
-                <p>
-                  Expiring in{" "}
-                  {Math.floor(
-                    (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
-                  )}{" "}
-                  hours
-                </p>
               </div>
               <p className="mt-1">{study.studyDescription}</p>
             </div>
@@ -428,7 +355,7 @@ function ConfirmStudyForm({
             </div>
             <div>
               <h3 className="text-lg font-bold">Questions</h3>
-              {study.questions.map((q, i) => (
+              {study.surveyQuestions.map((q, i) => (
                 <p key={i} className="mt-1">
                   {q.question}
                 </p>
@@ -458,12 +385,9 @@ function ConfirmStudyForm({
 
 // SUBMIT ANSWER FUNCTIONS
 const sumbitAnswersSchema = z.object({
-  participantAccount: z.string().min(3),
-  proposedStudyId: z.number(),
   answers: z
     .array(
       z.object({
-        proposedStudyQuestionId: z.number(),
         question: z.string(),
         result: z.boolean(),
       }),
@@ -474,35 +398,26 @@ function SubmitAnswersForm({
   study,
 }: {
   study: {
-    id: number;
     studyName: string;
     studyDescription: string;
     studyHypothesis: string;
     dataAnalysisMethod: string;
-    questions: {
-      id: number;
+    surveyQuestions: {
       question: string;
     }[];
     minimumParticipants: number;
     maximumParticipants: number;
-    createdUnixTimestamp: number;
-    expiryUnixTimestamp: number;
-    tags: string[];
-    proposingAccountId: number;
+    tags: { tag: string }[];
   };
 }) {
   // control the open/close state
   const [open, setOpen] = useState(false);
 
   // form state
-  const { loginState } = useLoginStore();
   const form = useForm<z.infer<typeof sumbitAnswersSchema>>({
     resolver: zodResolver(sumbitAnswersSchema),
     defaultValues: {
-      participantAccount: (loginState.loggedIn && loginState.account) || "",
-      proposedStudyId: study.id,
-      answers: study.questions.map((q) => ({
-        proposedStudyQuestionId: q.id,
+      answers: study.surveyQuestions.map((q) => ({
         question: q.question,
         result: false,
       })),
@@ -521,10 +436,17 @@ function SubmitAnswersForm({
     setOpen(false);
   }
 
+  const { voteOnStudy } = useStudyStore();
+
   // handle submitting
   async function onSubmit(values: z.infer<typeof sumbitAnswersSchema>) {
     // send to server
-    console.log(values);
+    voteOnStudy(
+      values.answers.map((i) => ({
+        question: i.question,
+        answers: i.result,
+      })),
+    );
 
     // on success
     form.reset();
@@ -535,41 +457,31 @@ function SubmitAnswersForm({
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Card button */}
       <DialogTrigger asChild>
-        <Card className="flex flex-col gap-2 min-w-fit h-fit py-4 px-6 bg-secondary shadow-md">
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
           <div className="flex justify-between items-center w-full h-fit ">
-            <h3 className="text-lg leading-tight font-medium">
-              {study.studyName}
-            </h3>
-            <ChevronRightIcon className="w-6 h-6 stroke-muted-foreground" />
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
           </div>
-          <p className="pb-2">{study.studyDescription}</p>
-          <div className="flex w-full min-w-fit h-6 gap-2.5">
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
             {study.tags?.[0] ? (
               <Badge className="bg-orange-400 hover:bg-orange-400">
-                {study.tags[0]}
+                {study.tags[0].tag}
               </Badge>
             ) : null}
             {study.tags?.[1] ? (
               <Badge className="bg-purple-500 hover:bg-purple-500">
-                {study.tags[1]}
+                {study.tags[1].tag}
               </Badge>
             ) : null}
             {study.tags?.[2] ? (
               <Badge className="g-blue-600 hover:bg-blue-600">
-                {study.tags[2]}
+                {study.tags[2].tag}
               </Badge>
             ) : null}
 
             {/* Separator */}
             <span className="flex-1" />
-
-            <Badge className="min-w-fit" variant="destructive">
-              <AlarmClockIcon className="w-4 mr-2" />
-              {Math.floor(
-                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
-              )}{" "}
-              Hours To Join
-            </Badge>
           </div>
         </Card>
       </DialogTrigger>
@@ -643,12 +555,10 @@ function SubmitAnswersForm({
 
 function CardComponent() {
   return (
-    <Card className="flex flex-col gap-2 min-w-fit h-fit py-4 px-6 bg-secondary shadow-md">
+    <Card className="flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
       <div className="flex justify-between items-center w-full h-fit ">
-        <h3 className="text-lg leading-tight font-medium">
-          STUDY NAME 1: AUTHOR NAME 1
-        </h3>
-        <ChevronRightIcon className="w-6 h-6 stroke-muted-foreground" />
+        <h3 className="text-lg font-medium">STUDY NAME 1: AUTHOR NAME 1</h3>
+        <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
       </div>
       <p>
         The purpose of this study is to determine the average cock size of the
@@ -656,7 +566,7 @@ function CardComponent() {
         participate in this study. The methodology for this study has been laid
         out in painstaking detail by Josh.
       </p>
-      <div className="flex w-full min-w-fit h-6 gap-2.5">
+      <div className="flex w-full min-w-fit h-6 gap-2">
         <Badge className="bg-orange-400">Sociology</Badge>
         <Badge className="bg-purple-500">Cocks</Badge>
         <Badge className="bg-blue-600">$0.20</Badge>

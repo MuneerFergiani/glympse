@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import AppLayout from "@/layouts/app-layout";
 import { LayoutPage } from "@/layouts/root-layout";
 import requestInterceptorRunner from "@/request-interceptors/request-interceptor-runner";
+import { useStudyStore } from "@/store/study";
 import { AlarmClockIcon, ChevronRightIcon } from "lucide-react";
 import { GetServerSideProps } from "next";
 
@@ -20,17 +21,19 @@ export const getServerSideProps: GetServerSideProps<ViewProps> = async (
 export interface ViewProps {}
 
 const View: LayoutPage = () => {
+  const studyStore = useStudyStore();
+
   return (
-    <div className="w-full h-full overflow-clip lg:px-16">
-      <ScrollArea className="w-full h-full min-h-0 px-6">
-        <div className="w-full h-full my-16 flex flex-col ">
+    <div className="w-full h-full px-6 py-2 overflow-clip lg:px-16">
+      <ScrollArea className="w-full h-full min-h-0">
+        <div className="w-full h-full px-2 py-2 flex flex-col ">
           {/* Browse studies section */}
           <section className="flex flex-col gap-8 h-fit">
             <div>
-              <h1 className="text-4xl leading-tight font-semibold mb-4">
+              <h1 className="text-5xl leading-[64px] font-medium mt-8">
                 Browse Studies
               </h1>
-              <p className="text-lg">
+              <p className=" text-lg">
                 You can browse the results of studies which have already been
                 completed and submitted. The results are free of fraud, do not
                 feature p-hacking, were conducted anonymously and are free of
@@ -38,20 +41,13 @@ const View: LayoutPage = () => {
               </p>
             </div>
 
-            <ul className="flex flex-col gap-6">
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
-            </ul>
+            {studyStore.study.state === "completed" ? (
+              <CardComponent study={studyStore.study.study} />
+            ) : (
+              <div className="text-4xl text-center text-muted-foreground">
+                There are no studies you can currently confirm...
+              </div>
+            )}
           </section>
         </div>
       </ScrollArea>
@@ -59,32 +55,48 @@ const View: LayoutPage = () => {
   );
 };
 
-function CardComponent() {
+function CardComponent({
+  study,
+}: {
+  study: {
+    studyName: string;
+    studyDescription: string;
+    studyHypothesis: string;
+    dataAnalysisMethod: string;
+    surveyQuestions: {
+      question: string;
+    }[];
+    minimumParticipants: number;
+    maximumParticipants: number;
+    tags: { tag: string }[];
+  };
+}) {
   return (
-    <Card className="flex flex-col gap-2 min-w-fit h-fit py-4 px-6 bg-secondary shadow-md">
+    <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
       <div className="flex justify-between items-center w-full h-fit ">
-        <h3 className="text-lg leading-tight font-medium">
-          STUDY NAME 1: AUTHOR NAME 1
-        </h3>
-        <ChevronRightIcon className="w-6 h-6 stroke-muted-foreground" />
+        <h3 className="text-lg font-medium">{study.studyName}</h3>
+        <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
       </div>
-      <p className="pb-2">
-        The purpose of this study is to determine the average cock size of the
-        male HomeDAO member. Only verified members of HomeDAO are allowed to
-        participate in this study. The methodology for this study has been laid
-        out in painstaking detail by Josh.
-      </p>
-      <div className="flex w-full min-w-fit h-6 gap-2.5">
-        <Badge className="bg-orange-400">Sociology</Badge>
-        <Badge className="bg-purple-500">Cocks</Badge>
-        <Badge className="bg-blue-600">$0.20</Badge>
+      <p>{study.studyDescription}</p>
+      <div className="flex w-full min-w-fit h-6 gap-2">
+        {study.tags?.[0] ? (
+          <Badge className="bg-orange-400 hover:bg-orange-400">
+            {study.tags[0].tag}
+          </Badge>
+        ) : null}
+        {study.tags?.[1] ? (
+          <Badge className="bg-purple-500 hover:bg-purple-500">
+            {study.tags[1].tag}
+          </Badge>
+        ) : null}
+        {study.tags?.[2] ? (
+          <Badge className="g-blue-600 hover:bg-blue-600">
+            {study.tags[2].tag}
+          </Badge>
+        ) : null}
 
         {/* Separator */}
         <span className="flex-1" />
-
-        <Badge className="min-w-fit" variant="destructive">
-          <AlarmClockIcon className="w-4 mr-2" />6 Hours To Confirm
-        </Badge>
       </div>
     </Card>
   );

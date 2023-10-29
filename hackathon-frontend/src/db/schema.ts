@@ -34,6 +34,14 @@ export const studyProposalRelations = relations(
       fields: [studyProposal.proposingAccountId],
       references: [account.id],
     }),
+    studyUnderConfirmation: one(studyUnderConfirmation, {
+      fields: [studyProposal.id],
+      references: [studyUnderConfirmation.studyProposalId],
+    }),
+    studyVoting: one(studyVoting, {
+      fields: [studyProposal.id],
+      references: [studyVoting.studyProposalId],
+    }),
     studyProposalQuestion: many(studyProposalQuestion),
     studyProposalTag: many(studyProposalTag),
     studyProposalParticipant: many(studyProposalParticipant),
@@ -102,16 +110,34 @@ export const studyProposalParticipantRelations = relations(
 
 // study under confirmation model and relations
 export const studyUnderConfirmation = sqliteTable("study_under_confirmation", {
-  id: integer("id")
-    .references(() => studyProposal.id)
-    .primaryKey(),
+  id: integer("id").primaryKey(),
+  studyProposalId: integer("study_proposal_id")
+    .notNull()
+    .unique()
+    .references(() => studyProposal.id),
+  expiryUnixTimestamp: integer("expiry_unix_timestamp").notNull(),
 });
 export const studyUnderConfirmationRelations = relations(
   studyUnderConfirmation,
   ({ one }) => ({
     studyProposal: one(studyProposal, {
-      fields: [studyUnderConfirmation.id],
+      fields: [studyUnderConfirmation.studyProposalId],
       references: [studyProposal.id],
     }),
   }),
 );
+
+export const studyVoting = sqliteTable("study_voting", {
+  id: integer("id").primaryKey(),
+  studyProposalId: integer("study_proposal_id")
+    .notNull()
+    .unique()
+    .references(() => studyProposal.id),
+  expiryUnixTimestamp: integer("expiry_unix_timestamp").notNull(),
+});
+export const studyVotingRelations = relations(studyVoting, ({ one }) => ({
+  studyProposal: one(studyProposal, {
+    fields: [studyVoting.studyProposalId],
+    references: [studyProposal.id],
+  }),
+}));

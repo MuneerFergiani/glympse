@@ -25,6 +25,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { useRouter } from "next/router";
+import { useStudyStore } from "@/store/study";
 
 export const formSchema = z
   .object({
@@ -91,6 +92,8 @@ export default function NewStudy({ children }: { children: ReactNode }) {
   // control the open/close state
   const [open, setOpen] = useState(false);
 
+  const studyStore = useStudyStore();
+
   // form state
   const { loginState } = useLoginStore();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -138,19 +141,8 @@ export default function NewStudy({ children }: { children: ReactNode }) {
 
   // handle submitting
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // send to server
-    const result = await proposeStudy.mutateAsync({
-      studyName: values.studyName,
-      studyDescription: values.studyDescription,
-      studyHypothesis: values.studyHypothesis,
-      dataAnalysisMethod: values.dataAnalysisMethod,
-      surveyQuestions: values.surveyQuestions,
-      minimumParticipants: values.minimumParticipants.toString(),
-      maximumParticipants: values.maximumParticipants.toString(),
-      timeLimit: values.timeLimit.toString(),
-      tags: values.tags,
-      proposingAccount: values.proposingAccount,
-    });
+    // save to persistence store
+    studyStore.addStudy(values);
 
     // on success
     form.reset();
@@ -229,7 +221,7 @@ export default function NewStudy({ children }: { children: ReactNode }) {
                       />
                     </FormControl>
                     <FormDescription>
-                      This is the hypothesis of your study.
+                      This is the hyposthesis of your study.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

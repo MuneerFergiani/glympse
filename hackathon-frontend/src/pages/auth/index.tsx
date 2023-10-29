@@ -77,8 +77,8 @@ const Auth: LayoutPage = () => {
       </div>
       <div className="bg-background w-[916px] flex justify-center overflow-auto scrollbar-none">
         <div className="flex flex-col items-center box-content w-full h-fit my-auto lg:w-[624px]">
-          <CardHeader className="text-center p-6">
-            <CardTitle className="text-3xl mb-4">Welcome to Glimpse!</CardTitle>
+          <CardHeader className="text-center">
+            <CardTitle className="text-3xl">Welcome to Glimpse!</CardTitle>
             <CardDescription>
               Glimpse helps you collect and analyse data whilst preserving user
               privacy. It is designed to combat various forms of fraud, such as
@@ -86,11 +86,11 @@ const Auth: LayoutPage = () => {
               thereby inspiring confidence in private information markets.
             </CardDescription>
           </CardHeader>
-          <CardFooter className="w-full lg:w-fit px-6 py-2">
+          <CardFooter className="w-full lg:w-fit">
             <Button
               onClick={connect}
               variant="outline"
-              className="w-full lg:w-fit h-fit text-base bg-zinc-900 text-zinc-100 hover:bg-zinc-800 hover:text-zinc-100 py-2.5 px-6"
+              className="w-full lg:w-fit h-fit text-base py-2.5 px-6"
             >
               <MetaMask className="mr-4 h-6 w-6" /> Log In with MetaMask
             </Button>

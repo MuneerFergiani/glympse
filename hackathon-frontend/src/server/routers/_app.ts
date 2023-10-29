@@ -7,6 +7,7 @@ import Database from "better-sqlite3";
 import * as schema from "@/db/schema";
 import { formSchema as proposeFormSchema } from "@/pages/propose/new-study-form";
 import { sql } from "drizzle-orm";
+import { env } from "@/env.mjs";
 
 // db setup
 const sqlite = new Database("sqlite.db");
@@ -14,6 +15,59 @@ const db = drizzle(sqlite, { schema });
 migrate(db, { migrationsFolder: "drizzle" });
 
 // helper functions
+async function syncStudyLifecycle(id: number) {
+  await db.transaction(async () => {
+    const studyProposal = (
+      await db
+        .select()
+        .from(schema.studyProposal)
+        .where(sql`${schema.studyProposal.id} = ${id}`)
+    )?.[0];
+
+    // is it pending?
+    const pendingStudy = (
+      await db
+        .select()
+        .from(schema.studyUnderConfirmation)
+        .where(sql`${schema.studyUnderConfirmation.studyProposalId} = ${id}`)
+    )?.[0];
+
+    // not pending route
+    if (!pendingStudy) {
+      // get participants
+      const studyParticipants = await db
+        .select()
+        .from(schema.studyProposalParticipant)
+        .where(sql`${schema.studyProposalParticipant.studyProposalId} = ${id}`);
+
+      // expired + threshold met = promote to pending
+      // not expired + maximum met = promote to pending
+      if (
+        (studyProposal.expiryUnixTimestamp <= Date.now() &&
+          studyParticipants.length >= studyProposal.minimumParticipants) ||
+        (studyProposal.expiryUnixTimestamp > Date.now() &&
+          studyParticipants.length === studyProposal.maximumParticipants)
+      ) {
+        // promote to pending study and exit
+        db.insert(schema.studyUnderConfirmation)
+          .values({
+            studyProposalId: studyProposal.id,
+            expiryUnixTimestamp:
+              Date.now() + env.STUDY_CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000,
+          })
+          .run();
+        return;
+      }
+
+      // expired + not met = cancelled = do nothing
+      // not expired + not met = onboarding = do nothing
+      // not expired + threshold met but max not met = onboarding = do nothing
+      return;
+    }
+
+    // TODO: implement the rest of function
+  });
+}
 type StudyLifecycle =
   | "onboarding"
   | "confirmation"
@@ -37,7 +91,7 @@ async function getStudyLifecycle(id: number): Promise<StudyLifecycle> {
     await db
       .select()
       .from(schema.studyUnderConfirmation)
-      .where(sql`${schema.studyUnderConfirmation.id} = ${id}`)
+      .where(sql`${schema.studyUnderConfirmation.studyProposalId} = ${id}`)
   )?.[0];
   if (!studyUnderConfirmation) {
     // Since we just synced everything, then all expired = failed
@@ -50,56 +104,20 @@ async function getStudyLifecycle(id: number): Promise<StudyLifecycle> {
     }
   }
 
-  // TODO: implement rest of this function
-  return "confirmation";
-}
-async function syncStudyLifecycle(id: number) {
-  const studyProposal = (
+  // is it under voting?
+  const studyVoting = (
     await db
       .select()
-      .from(schema.studyProposal)
-      .where(sql`${schema.studyProposal.id} = ${id}`)
+      .from(schema.studyVoting)
+      .where(sql`${schema.studyVoting.studyProposalId} = ${id}`)
   )?.[0];
-
-  // is it pending?
-  const pendingStudy = (
-    await db
-      .select()
-      .from(schema.studyUnderConfirmation)
-      .where(sql`${schema.studyUnderConfirmation.id} = ${id}`)
-  )?.[0];
-  // not pending route
-  if (!pendingStudy) {
-    // get participants
-    const studyParticipants = await db
-      .select()
-      .from(schema.studyProposalParticipant)
-      .where(sql`${schema.studyProposalParticipant.studyProposalId} = ${id}`);
-
-    // expired + threshold met = promote to pending
-    // not expired + maximum met = promote to pending
-    if (
-      (studyProposal.expiryUnixTimestamp <= Date.now() &&
-        studyParticipants.length >= studyProposal.minimumParticipants) ||
-      (studyProposal.expiryUnixTimestamp > Date.now() &&
-        studyParticipants.length === studyProposal.maximumParticipants)
-    ) {
-      // promote to pending study and exit
-      db.insert(schema.studyUnderConfirmation)
-        .values({
-          id: studyProposal.id,
-        })
-        .run();
-      return;
-    }
-
-    // expired + not met = cancelled = do nothing
-    // not expired + not met = onboarding = do nothing
-    // not expired + threshold met but max not met = onboarding = do nothing
-    return;
+  console.log(studyVoting);
+  if (typeof studyVoting === "undefined") {
+    return "confirmation";
   }
 
-  // TODO: implement the rest of function
+  // TODO: implement rest of this function
+  return "voting";
 }
 
 // input schemas
@@ -307,6 +325,101 @@ export const appRouter = router({
       // find questions and tags for these
       return await Promise.all(
         studiesBeingConfirmed.map(async (study) => {
+          const questions = await db
+            .select({
+              id: schema.studyProposalQuestion.id,
+              question: schema.studyProposalQuestion.question,
+            })
+            .from(schema.studyProposalQuestion)
+            .where(
+              sql`${schema.studyProposalQuestion.studyProposalId} = ${study.id}`,
+            );
+          const tags = (
+            await db
+              .select({ tag: schema.studyProposalTag.tag })
+              .from(schema.studyProposalTag)
+              .where(
+                sql`${schema.studyProposalTag.studyProposalId} = ${study.id}`,
+              )
+          ).map((i) => i.tag);
+          const studyUnderConfirmation = (
+            await db
+              .select()
+              .from(schema.studyUnderConfirmation)
+              .where(
+                sql`${schema.studyUnderConfirmation.studyProposalId} = ${study.id}`,
+              )
+          )?.[0];
+
+          return {
+            ...study,
+            expiryUnixTimestamp: studyUnderConfirmation.expiryUnixTimestamp, // override the timestamp in the study proposal
+            questions,
+            tags,
+          };
+        }),
+      );
+    }),
+  confirmStudy: procedure
+    .input(
+      z.object({
+        account: z.string().min(3),
+        studyProposalId: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      // find account id
+      const accountId = (
+        await db
+          .select({ id: schema.account.id })
+          .from(schema.account)
+          .where(sql`${schema.account.address} = ${input.account}`)
+      ).map((i) => i.id)[0];
+
+      // add connection
+      await db.insert(schema.studyVoting).values({
+        expiryUnixTimestamp:
+          Date.now() + env.STUDY_CONFIRMATION_WINDOW_HOURS * 60 * 60 * 1000,
+        studyProposalId: input.studyProposalId,
+      });
+
+      // check if we want to move study to "confirmation" state
+    }),
+  getStudiesToVote: procedure
+    .input(z.object({ account: z.string() }))
+    .query(async ({ input }) => {
+      // find account id
+      const accountId = (
+        await db
+          .select({ id: schema.account.id })
+          .from(schema.account)
+          .where(sql`${schema.account.address} = ${input.account}`)
+      ).map((i) => i.id)[0];
+
+      // fetch all studies
+      const studies = await db.query.studyProposal.findMany({
+        with: {
+          studyProposalParticipant: true,
+        },
+      });
+
+      // filter out studies that are not in the voting stage
+      const proposedStudies = await Promise.all(
+        studies.filter(
+          async (study) => (await getStudyLifecycle(study.id)) === "voting",
+        ),
+      );
+
+      // filter out those that have are not mine
+      const votableStudies = proposedStudies.filter((study) => {
+        for (const p of study.studyProposalParticipant)
+          if (p.participantAccountId === accountId) return true;
+        return false;
+      });
+
+      // find questions and tags for these
+      return await Promise.all(
+        votableStudies.map(async (study) => {
           const questions = await db
             .select({
               id: schema.studyProposalQuestion.id,

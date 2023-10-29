@@ -39,4 +39,20 @@ CREATE TABLE `study_proposal_tag` (
 	FOREIGN KEY (`study_proposal_id`) REFERENCES `study_proposal`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `account_address_unique` ON `account` (`address`);
+CREATE TABLE `study_under_confirmation` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`study_proposal_id` integer NOT NULL,
+	`expiry_unix_timestamp` integer NOT NULL,
+	FOREIGN KEY (`study_proposal_id`) REFERENCES `study_proposal`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE TABLE `study_voting` (
+	`id` integer PRIMARY KEY NOT NULL,
+	`study_proposal_id` integer NOT NULL,
+	`expiry_unix_timestamp` integer NOT NULL,
+	FOREIGN KEY (`study_proposal_id`) REFERENCES `study_proposal`(`id`) ON UPDATE no action ON DELETE no action
+);
+--> statement-breakpoint
+CREATE UNIQUE INDEX `account_address_unique` ON `account` (`address`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_under_confirmation_study_proposal_id_unique` ON `study_under_confirmation` (`study_proposal_id`);--> statement-breakpoint
+CREATE UNIQUE INDEX `study_voting_study_proposal_id_unique` ON `study_voting` (`study_proposal_id`);
