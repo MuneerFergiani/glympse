@@ -14,6 +14,7 @@ import { useSDK } from "@metamask/sdk-react";
 import { useLoginStore } from "@/store/login";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/router";
+import { trpc } from "@/lib/trpc";
 
 export const getServerSideProps: GetServerSideProps<AuthProps> = async (
   context,
@@ -30,6 +31,7 @@ export interface AuthProps {}
 const Auth: LayoutPage = () => {
   const { loginState, logIn } = useLoginStore();
   const router = useRouter();
+  const logInServer = trpc.logIn.useMutation();
 
   const { toast } = useToast();
   const { sdk } = useSDK();
@@ -48,7 +50,9 @@ const Auth: LayoutPage = () => {
         throw new Error("Failed to connect to MetaMask");
 
       // update state and navigate to main page
-      logIn(accounts[0]);
+      const account = accounts[0];
+      logInServer.mutate({ account });
+      logIn(account);
       router.push("/");
     } catch (err) {
       console.warn(err);

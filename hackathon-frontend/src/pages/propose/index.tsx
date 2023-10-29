@@ -6,7 +6,7 @@ import { LayoutPage } from "@/layouts/root-layout";
 import requestInterceptorRunner from "@/request-interceptors/request-interceptor-runner";
 import { AlarmClockIcon, ChevronRightIcon, PlusIcon } from "lucide-react";
 import { GetServerSideProps } from "next";
-import NewStudy from "./new-study";
+import NewStudy from "./new-study-form";
 
 export const getServerSideProps: GetServerSideProps<ProposeProps> = async (
   context,

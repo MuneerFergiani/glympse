@@ -23,6 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
+import { trpc } from "@/lib/trpc";
 
 export const formSchema = z
   .object({
@@ -86,23 +87,34 @@ export const formSchema = z
   });
 
 export default function NewStudy({ children }: { children: ReactNode }) {
-  // control the state
+  // control the open/close state
   const [open, setOpen] = useState(false);
 
+  // form state
   const { loginState } = useLoginStore();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // default one question
-      surveyQuestions: [{ question: "" }, { question: "" }],
-
-      // default no tags
+      studyName: "",
+      studyDescription: "",
+      studyHypothesis: "",
+      dataAnalysisMethod: "",
+      surveyQuestions: [{ question: "" }],
+      // @ts-ignore
+      minimumParticipants: "",
+      // @ts-ignore
+      maximumParticipants: "",
+      // @ts-ignore
+      timeLimit: "",
       tags: [],
 
       // set login info
       proposingAccount: (loginState.loggedIn && loginState.account) || "",
     },
   });
+
+  // hooks
+  const proposeStudy = trpc.proposeStudy.useMutation();
 
   // survey questions
   const questionsArray = useFieldArray({
@@ -119,13 +131,30 @@ export default function NewStudy({ children }: { children: ReactNode }) {
   // handle cancel
   function onCancel() {
     form.reset();
-    // form.clearErrors();
     setOpen(false);
   }
 
   // handle submitting
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+    // send to server
+    const result = await proposeStudy.mutateAsync({
+      studyName: values.studyName,
+      studyDescription: values.studyDescription,
+      studyHypothesis: values.studyHypothesis,
+      dataAnalysisMethod: values.dataAnalysisMethod,
+      surveyQuestions: values.surveyQuestions,
+      minimumParticipants: values.minimumParticipants.toString(),
+      maximumParticipants: values.maximumParticipants.toString(),
+      timeLimit: values.timeLimit.toString(),
+      tags: values.tags,
+      proposingAccount: values.proposingAccount,
+    });
+
+    console.log(result);
+
+    // on success
+    form.reset();
+    setOpen(false);
   }
 
   return (

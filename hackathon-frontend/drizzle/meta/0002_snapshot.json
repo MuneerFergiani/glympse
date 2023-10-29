@@ -1,0 +1,283 @@
+{
+  "version": "5",
+  "dialect": "sqlite",
+  "id": "b3b11cff-4b4b-40ad-a879-1be8bad2792e",
+  "prevId": "faa16c15-af72-4607-b5be-f869d984fd9c",
+  "tables": {
+    "account": {
+      "name": "account",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "account_address_unique": {
+          "name": "account_address_unique",
+          "columns": [
+            "address"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "study_proposal": {
+      "name": "study_proposal",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_name": {
+          "name": "study_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_description": {
+          "name": "study_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_hypothesis": {
+          "name": "study_hypothesis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "data_analysis_method": {
+          "name": "data_analysis_method",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "minimum_participants": {
+          "name": "minimum_participants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "maximum_participants": {
+          "name": "maximum_participants",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_unix_timestamp": {
+          "name": "created_unix_timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expiry_unix_timestamp": {
+          "name": "expiry_unix_timestamp",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "proposing_account_id": {
+          "name": "proposing_account_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "study_proposal_proposing_account_id_account_id_fk": {
+          "name": "study_proposal_proposing_account_id_account_id_fk",
+          "tableFrom": "study_proposal",
+          "tableTo": "account",
+          "columnsFrom": [
+            "proposing_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "study_participant": {
+      "name": "study_participant",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_account_id": {
+          "name": "participant_account_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_proposal_id": {
+          "name": "study_proposal_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "study_participant_participant_account_id_account_id_fk": {
+          "name": "study_participant_participant_account_id_account_id_fk",
+          "tableFrom": "study_participant",
+          "tableTo": "account",
+          "columnsFrom": [
+            "participant_account_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "study_participant_study_proposal_id_study_proposal_id_fk": {
+          "name": "study_participant_study_proposal_id_study_proposal_id_fk",
+          "tableFrom": "study_participant",
+          "tableTo": "study_proposal",
+          "columnsFrom": [
+            "study_proposal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "study_proposal_question": {
+      "name": "study_proposal_question",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "question": {
+          "name": "question",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_proposal_id": {
+          "name": "study_proposal_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "study_proposal_question_study_proposal_id_study_proposal_id_fk": {
+          "name": "study_proposal_question_study_proposal_id_study_proposal_id_fk",
+          "tableFrom": "study_proposal_question",
+          "tableTo": "study_proposal",
+          "columnsFrom": [
+            "study_proposal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "study_proposal_tag": {
+      "name": "study_proposal_tag",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "tag": {
+          "name": "tag",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "study_proposal_id": {
+          "name": "study_proposal_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "study_proposal_tag_study_proposal_id_study_proposal_id_fk": {
+          "name": "study_proposal_tag_study_proposal_id_study_proposal_id_fk",
+          "tableFrom": "study_proposal_tag",
+          "tableTo": "study_proposal",
+          "columnsFrom": [
+            "study_proposal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  }
+}

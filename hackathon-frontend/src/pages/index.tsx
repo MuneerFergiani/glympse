@@ -8,7 +8,15 @@ import requestInterceptorRunner from "@/request-interceptors/request-interceptor
 import { GetServerSideProps } from "next";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const getServerSideProps: GetServerSideProps<HomeProps> = async (
   context,
@@ -23,12 +31,9 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async (
 export interface HomeProps {}
 
 const Home: LayoutPage = () => {
-  const hello = trpc.hello.useQuery({ text: "Client!" });
+  const getStudiesToJoin = trpc.getStudiesToJoin.useQuery();
 
-  useEffect(() => {
-    console.log(hello.data?.greeting);
-    console.log(hello.data?.todos);
-  }, [hello]);
+  console.log(getStudiesToJoin.data);
 
   return (
     <div className="w-full h-full px-6 py-2 overflow-clip lg:px-16">
@@ -87,9 +92,11 @@ const Home: LayoutPage = () => {
             </div>
 
             <ul className="flex flex-col gap-4">
-              <CardComponent />
-              <CardComponent />
-              <CardComponent />
+              {getStudiesToJoin.data?.map((study, index) => (
+                <li key={index}>
+                  <JoinStudyForm study={study} />
+                </li>
+              ))}
             </ul>
           </section>
         </div>
@@ -97,6 +104,79 @@ const Home: LayoutPage = () => {
     </div>
   );
 };
+
+function JoinStudyForm({
+  study,
+}: {
+  study: {
+    id: number;
+    studyName: string;
+    studyDescription: string;
+    studyHypothesis: string;
+    dataAnalysisMethod: string;
+    questions: string[];
+    minimumParticipants: number;
+    maximumParticipants: number;
+    createdUnixTimestamp: number;
+    expiryUnixTimestamp: number;
+    tags: string[];
+    proposingAccountId: number;
+  };
+}) {
+  // control the open/close state
+  const [open, setOpen] = useState(false);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {/* Card button */}
+      <DialogTrigger asChild>
+        <Card className="flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
+          <div className="flex justify-between items-center w-full h-fit ">
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
+          </div>
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
+            {study.tags?.[0] ? (
+              <Badge className="bg-orange-400 hover:bg-orange-400">
+                {study.tags[0]}
+              </Badge>
+            ) : null}
+            {study.tags?.[1] ? (
+              <Badge className="bg-purple-500 hover:bg-purple-500">
+                {study.tags[1]}
+              </Badge>
+            ) : null}
+            {study.tags?.[2] ? (
+              <Badge className="g-blue-600 hover:bg-blue-600">
+                {study.tags[2]}
+              </Badge>
+            ) : null}
+
+            {/* Separator */}
+            <span className="flex-1" />
+
+            <Badge className="min-w-fit" variant="destructive">
+              <AlarmClockIcon className="w-4 mr-2" />
+              {Math.floor(
+                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
+              )}{" "}
+              Hours To Confirm
+            </Badge>
+          </div>
+        </Card>
+      </DialogTrigger>
+      <DialogContent className="max-h-[calc(100%-32px)] sm:max-w-[calc(100%-128px)] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Join a Study</DialogTitle>
+          <DialogDescription>
+            To join this study, you need to first fill out a few things
+          </DialogDescription>
+        </DialogHeader>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function CardComponent() {
   return (

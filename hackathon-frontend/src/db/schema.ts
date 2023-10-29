@@ -1,13 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
 
-// TODO: deleteme
-export const todos = sqliteTable("todos", {
-  id: integer("id").primaryKey(),
-  content: text("content"),
-  done: integer("done"),
-});
-
 // Account model and relations
 export const account = sqliteTable("account", {
   id: integer("id").primaryKey(),
@@ -48,7 +41,7 @@ export const studyProposalRelations = relations(
 
 // study proposal question model and relations
 export const studyProposalQuestion = sqliteTable("study_proposal_question", {
-  id: integer("id").notNull(),
+  id: integer("id").primaryKey(),
   question: text("question").notNull(),
   studyProposalId: integer("study_proposal_id")
     .notNull()
@@ -66,7 +59,7 @@ export const studyProposalQuestionRelations = relations(
 
 // study proposal tag model and relations
 export const studyProposalTag = sqliteTable("study_proposal_tag", {
-  id: integer("id").notNull(),
+  id: integer("id").primaryKey(),
   tag: text("tag").notNull(),
   studyProposalId: integer("study_proposal_id")
     .notNull()
