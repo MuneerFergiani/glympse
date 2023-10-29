@@ -17,7 +17,7 @@ See the Step-By-Step explanation in `README.md`
 
 ## How Noir Powers Glimpse
 
-Glimpse, leveraging Noir, crafts verifiable pseudonymous cryptographic identities on the blockchain. This robust mechanism ensures unyielding data provenance and guarantees participant anonymity. Responses are encrypted, safeguarding them from undue alterations. Data decryption relies on a collaborative n-of-n threshold decryption, only after full participation. The enforced preliminary declaration of research methodologies, enabled through Noir's functionalities, mitigates issues like p-hacking.
+Noir is used to design the ZK circuits which perform participant and response authentication on-chain whilst preserving user anonymity. We make use of Noir's ability to compile down to a Solidity verifier contract by using the verifier in our smart-contracts. We also use Noir.JS in the web app.
 
 ## Limitations
 
