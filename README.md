@@ -27,7 +27,7 @@ Glimpse addresses all three problems at their core, restoring accountability and
 
 ## How It Works
 
-Glimpse uses ZK (via Noir) to verify pseudonymous cryptographic identities for verified public identities on the blockchain, ensuring secrecy and provenance. Participants then decide how to respond to the study question and encrypt their answers. This encryption ensures data cannot be tampered with and can only be decrypted with the cooperation of other participants, promoting data secrecy and undermining bribery incentives -- there can be no proof of co-operation amongst colluding parties, so there are is no incentive to lie or intervene to distort results. It also conceals vital information from those who seek to destroy user anonymity by analysing the results as they come in.
+Glimpse uses ZK (via Noir) to generate verifiable pseudonymous cryptographic identities for known humans on the blockchain, ensuring secrecy and provenance. Participants then decide how to respond to the study question and encrypt their answers. This encryption ensures data cannot be tampered with and can only be decrypted with the cooperation of other participants, promoting data secrecy and undermining bribery incentives -- there can be no proof of co-operation amongst colluding parties, so there are is no incentive to lie or intervene to distort results. It also conceals vital information from those who seek to destroy user anonymity by analysing the results as they come in.
 
 All data remains encrypted until every participant has finished answering. At this point, there's sufficient cryptographic information to reconstruct the decryption key, leveraging a simple n-of-n threshold group decryption scheme. No individual can vote without
 
@@ -59,6 +59,7 @@ There are very many addressable limitations to this demo implementation of Glimp
 - It is possible to implement an m-of-n scheme, whereby not everybody needs to vote for the result to be published.
 - The monetisation of surveys and studies is not yet complete.
 - The responses are currently limited to yes and no answers.
+- The human-checking aspect is incomplete, thus far it depends on a whitelist of addresses belonging to real humans. This can easily be improved.
 - There are some edge cases for which the web-app does not account for nor handle gracefully.
 - There is no differential privacy to actually obscure the data-points.
 
