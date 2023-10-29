@@ -1,5 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 import { relations } from "drizzle-orm";
+import { number } from "zod";
 
 // Account model and relations
 export const account = sqliteTable("account", {
@@ -94,6 +95,22 @@ export const studyProposalParticipantRelations = relations(
     }),
     studyProposal: one(studyProposal, {
       fields: [studyProposalParticipant.studyProposalId],
+      references: [studyProposal.id],
+    }),
+  }),
+);
+
+// study under confirmation model and relations
+export const studyUnderConfirmation = sqliteTable("study_under_confirmation", {
+  id: integer("id")
+    .references(() => studyProposal.id)
+    .primaryKey(),
+});
+export const studyUnderConfirmationRelations = relations(
+  studyUnderConfirmation,
+  ({ one }) => ({
+    studyProposal: one(studyProposal, {
+      fields: [studyUnderConfirmation.id],
       references: [studyProposal.id],
     }),
   }),

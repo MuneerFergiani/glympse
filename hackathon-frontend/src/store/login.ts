@@ -35,7 +35,7 @@ export const useLoginStore = create<LoginStore>(
       logOut: () => set({ loginState: { loggedIn: false } }),
     }),
     {
-      name: "",
+      name: "login-store",
       storage: createJSONStorage(() => sessionStorage),
     },
   ),

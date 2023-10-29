@@ -2,13 +2,13 @@ import { Button } from "@/components/ui/button";
 import { ChevronRightIcon, AlarmClockIcon } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import AppLayout from "@/layouts/app-layout";
+import AppLayout, { AppContext } from "@/layouts/app-layout";
 import { LayoutPage } from "@/layouts/root-layout";
 import requestInterceptorRunner from "@/request-interceptors/request-interceptor-runner";
 import { GetServerSideProps } from "next";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -32,6 +31,7 @@ import {
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
 import { useRouter } from "next/router";
+import { useStudyStore } from "@/store/study";
 
 export const getServerSideProps: GetServerSideProps<HomeProps> = async (
   context,
@@ -46,9 +46,12 @@ export const getServerSideProps: GetServerSideProps<HomeProps> = async (
 export interface HomeProps {}
 
 const Home: LayoutPage = () => {
-  const getStudiesToJoin = trpc.getStudiesToJoin.useQuery();
-
-  console.log(getStudiesToJoin.data);
+  const { account } = useContext(AppContext);
+  const { confirmed } = useStudyStore();
+  const getStudiesToJoin = trpc.getStudiesToJoin.useQuery({
+    account,
+  });
+  const getStudiesToConfirm = trpc.getStudiesToConfirm.useQuery({ account });
 
   return (
     <div className="w-full h-full px-6 py-2 overflow-clip lg:px-16">
@@ -74,14 +77,25 @@ const Home: LayoutPage = () => {
               <h1 className="text-3xl font-medium mb-4">
                 Awaiting Your Confirmation
               </h1>
-              <ul className="flex flex-col gap-4">
-                <CardComponent />
-                <CardComponent />
-                <CardComponent />
-              </ul>
+              {getStudiesToConfirm.data &&
+              getStudiesToConfirm.data.length > 0 ? (
+                <ul className="flex flex-col gap-4">
+                  {getStudiesToConfirm.data
+                    ?.filter((study) => !confirmed.includes(study.id))
+                    .map((study, index) => (
+                      <li key={index}>
+                        <ConfirmStudyForm study={study} />
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <div className="text-4xl text-center text-muted-foreground">
+                  There are no studies you can currently confirm...
+                </div>
+              )}
             </div>
 
-            {/* Condirmation section */}
+            {/* Voting section */}
             <div>
               <h1 className="text-3xl font-medium mb-4">Ready to Vote</h1>
               <ul className="flex flex-col gap-4">
@@ -106,13 +120,19 @@ const Home: LayoutPage = () => {
               </p>
             </div>
 
-            <ul className="flex flex-col gap-4">
-              {getStudiesToJoin.data?.map((study, index) => (
-                <li key={index}>
-                  <JoinStudyForm study={study} />
-                </li>
-              ))}
-            </ul>
+            {getStudiesToJoin.data && getStudiesToJoin.data.length > 0 ? (
+              <ul className="flex flex-col gap-4">
+                {getStudiesToJoin.data?.map((study, index) => (
+                  <li key={index}>
+                    <JoinStudyForm study={study} />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-4xl text-center text-muted-foreground">
+                There are no studies you can currently join...
+              </div>
+            )}
           </section>
         </div>
       </ScrollArea>
@@ -276,6 +296,164 @@ function JoinStudyForm({
   );
 }
 
+// CONFIRM STUDY FORM
+function ConfirmStudyForm({
+  study,
+}: {
+  study: {
+    id: number;
+    studyName: string;
+    studyDescription: string;
+    studyHypothesis: string;
+    dataAnalysisMethod: string;
+    questions: {
+      id: number;
+      question: string;
+    }[];
+    minimumParticipants: number;
+    maximumParticipants: number;
+    createdUnixTimestamp: number;
+    expiryUnixTimestamp: number;
+    tags: string[];
+    proposingAccountId: number;
+  };
+}) {
+  // hooks
+  const [open, setOpen] = useState(false);
+  const { loginState } = useLoginStore();
+  const { addConfirmed } = useStudyStore();
+  const router = useRouter();
+
+  // handle cancel
+  function onCancel() {
+    setOpen(false);
+  }
+
+  // handle submitting
+  async function onConfirm() {
+    // send to server
+    // TODO: impl confirmation logic
+    // useJoinStudy.mutate({
+    //   account: (loginState.loggedIn && loginState.account) || "",
+    //   studyProposalId: study.id,
+    // });
+
+    // on success
+    addConfirmed(study.id);
+    setOpen(false);
+    router.reload();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {/* Card button */}
+      <DialogTrigger asChild>
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
+          <div className="flex justify-between items-center w-full h-fit ">
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
+          </div>
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
+            {study.tags?.[0] ? (
+              <Badge className="bg-orange-400 hover:bg-orange-400">
+                {study.tags[0]}
+              </Badge>
+            ) : null}
+            {study.tags?.[1] ? (
+              <Badge className="bg-purple-500 hover:bg-purple-500">
+                {study.tags[1]}
+              </Badge>
+            ) : null}
+            {study.tags?.[2] ? (
+              <Badge className="g-blue-600 hover:bg-blue-600">
+                {study.tags[2]}
+              </Badge>
+            ) : null}
+
+            {/* Separator */}
+            <span className="flex-1" />
+
+            <Badge className="min-w-fit" variant="destructive">
+              <AlarmClockIcon className="w-4 mr-2" />
+              {Math.floor(
+                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
+              )}{" "}
+              Hours To Confirm
+            </Badge>
+          </div>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="max-h-[calc(100%-32px)] sm:max-w-[calc(100%-128px)] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Confirm this Study</DialogTitle>
+          <DialogDescription>
+            Here is the details of the study you will be confirming
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-8 min-h-0 overflow-auto">
+            <div>
+              <h3 className="text-lg">
+                <b>Study:</b> <i>{study.studyName}</i>
+              </h3>
+              <div className="flex gap-4 text-muted-foreground text-sm">
+                <p>
+                  N = {study.minimumParticipants} to {study.maximumParticipants}
+                </p>
+                <p>
+                  Created: {new Date(study.createdUnixTimestamp).toDateString()}
+                </p>
+                <p>
+                  Expiring in{" "}
+                  {Math.floor(
+                    (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
+                  )}{" "}
+                  hours
+                </p>
+              </div>
+              <p className="mt-1">{study.studyDescription}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Hypothesis</h3>
+              <p className="mt-1">{study.studyHypothesis}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Data Analysis Method</h3>
+              <p className="mt-1">{study.dataAnalysisMethod}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Questions</h3>
+              {study.questions.map((q, i) => (
+                <p key={i} className="mt-1">
+                  {q.question}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-2 justify-center">
+            <Button
+              type="button"
+              onClick={onCancel}
+              variant="outline"
+              className="w-64"
+            >
+              Cancel
+            </Button>
+            <Button onClick={onConfirm} className="w-64">
+              Confirm
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // SUBMIT ANSWER FUNCTIONS
 const sumbitAnswersSchema = z.object({
   participantAccount: z.string().min(3),
@@ -393,7 +571,7 @@ function SubmitAnswersForm({
       </DialogTrigger>
       <DialogContent className="max-h-[calc(100%-32px)] sm:max-w-[calc(100%-128px)] flex flex-col">
         <DialogHeader>
-          <DialogTitle>Join a Study</DialogTitle>
+          <DialogTitle>Join this Study</DialogTitle>
           <DialogDescription>
             To join this study, you need to first answer these questions
           </DialogDescription>

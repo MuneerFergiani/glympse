@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
+import { useRouter } from "next/router";
 
 export const formSchema = z
   .object({
@@ -115,6 +116,7 @@ export default function NewStudy({ children }: { children: ReactNode }) {
 
   // hooks
   const proposeStudy = trpc.proposeStudy.useMutation();
+  const router = useRouter();
 
   // survey questions
   const questionsArray = useFieldArray({
@@ -153,6 +155,7 @@ export default function NewStudy({ children }: { children: ReactNode }) {
     // on success
     form.reset();
     setOpen(false);
+    router.reload();
   }
 
   return (
