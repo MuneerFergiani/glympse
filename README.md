@@ -1,5 +1,7 @@
 # Glimpse: Trustworthy Data Collection With ZK and Threshold Decryption
 
+**Hackathon Judges: See HACKATHON.md for a more relevant explanation.**
+
 Academia is mired in various kinds of data fraud, especially among sociologists. The pressure to publish, secure funding, and achieve recognition can, at times, incentivize scientists to manipulate or even fabricate data.
 
 One infamous example is the case of Andrew Wakefield, who, in 1998, published a study claiming a link between the MMR vaccine and autism. This study was later discovered to be based on falsified data. It has since been retracted, but not before causing widespread panic and a significant drop in vaccination rates.
