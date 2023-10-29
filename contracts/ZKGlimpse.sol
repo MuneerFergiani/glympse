@@ -37,8 +37,12 @@ contract zkGlimpse {
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = 1635551999;
 
-    BinaryQuestion[] public BinaryQuestions;
-            
+    // QUESTIONS
+    BinaryQuestion[] public BinaryQuestions = [
+        BinaryQuestion("Question 1?"),
+        BinaryQuestion("Question 2?")
+    ];
+
     uint32[] ZKP0;
     uint32[] ZKP1;
 
