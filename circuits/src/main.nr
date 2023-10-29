@@ -30,16 +30,18 @@ use dep::std;
 //     assert(merkle_root == root);
 // }
 
+global DEPTH = 12;
+
 fn main(
     unhashed_partial_decryption_key: pub [u8; 64], 
-    message: pub [u8; 8], 
+    message: pub [u8; 32], 
     root: pub Field, 
     pubkey_x: Field, 
     pubkey_y: Field, 
     nonce: [u8; 32], 
-    hash_path: [Field; 2],
+    hash_path: [Field; DEPTH],
     index: Field, 
-    sig: [u8; 64]) 
+    signed_response: [u8; 64]) 
 {
     let hashed_message = std::hash::sha256(message);
     
@@ -54,7 +56,7 @@ fn main(
     }
     
     let is_unhashed_partial_decryption_key_yours = std::ecdsa_secp256k1::verify_signature(x, y, unhashed_partial_decryption_key, nonce);
-    let is_message_verified = std::ecdsa_secp256k1::verify_signature(x, y, sig, hashed_message);
+    let is_message_verified = std::ecdsa_secp256k1::verify_signature(x, y, signed_response, hashed_message);
 
     assert(is_unhashed_partial_decryption_key_yours);
     assert(is_message_verified);
