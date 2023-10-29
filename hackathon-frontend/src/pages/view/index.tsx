@@ -21,16 +21,16 @@ export interface ViewProps {}
 
 const View: LayoutPage = () => {
   return (
-    <div className="w-full h-full overflow-clip lg:px-16 py-16">
+    <div className="w-full h-full overflow-clip lg:px-16">
       <ScrollArea className="w-full h-full min-h-0 px-6">
-        <div className="w-full h-full px-2 py-2 flex flex-col ">
+        <div className="w-full h-full my-16 flex flex-col ">
           {/* Browse studies section */}
           <section className="flex flex-col gap-8 h-fit">
             <div>
               <h1 className="text-4xl leading-tight font-semibold mb-4">
                 Browse Studies
               </h1>
-              <p className=" text-lg">
+              <p className="text-lg">
                 You can browse the results of studies which have already been
                 completed and submitted. The results are free of fraud, do not
                 feature p-hacking, were conducted anonymously and are free of

@@ -22,12 +22,12 @@ export interface ProposeProps {}
 
 const Propose: LayoutPage = () => {
   return (
-    <div className="w-full h-full px-6 py-2 overflow-clip lg:px-16">
-      <ScrollArea className="w-full h-full min-h-0">
-        <div className="w-full h-full px-2 py-2 flex flex-col gap-16">
-          {/* Propose new study section */}
-          <section className="flex flex-col gap-3 h-fit">
-            <h1 className="text-4xl leading-tight font-semibold mt-8 mb-4">
+    <div className="w-full h-full overflow-clip lg:px-16">
+      <ScrollArea className="w-full h-full min-h-0 px-6">
+        <div className="w-full h-full my-16 gap-16 flex flex-col ">
+          {/* Browse studies section */}
+          <section className="flex flex-col gap-6 h-fit">
+            <h1 className="text-4xl leading-tight font-semibold mb-4">
               Propose New Study
             </h1>
 
