@@ -1,3 +1,7 @@
+# This is used to generate our Solidity contract, which will be used to safeguard the study on-chain.
+# It takes in a JSON description of the study and produces the Solidity contract.
+# Make sure you have also generated the Solidity circuit verifier using `nargo codegen-verifier`.
+
 import json
 
 def format_json(input_json):
@@ -61,19 +65,15 @@ def generate_contract_from_template(filename, data_to_embed):
     start_tag = "/* START META INFORMATION */"
     end_tag = "/* END META INFORMATION */"
 
-    # Split the content at the tags
     before_tag = content.split(start_tag)[0]
     after_tag = content.split(end_tag)[1]
-    # Embed the data between the tags
     new_content = before_tag + start_tag + "\n" + formatted_data + "\n    " + end_tag + after_tag
 
     start_tag = "/* START CONSTRUCTOR INFORMATION */"
     end_tag = "/* END CONSTRUCTOR INFORMATION */"
 
-    # Split the content at the tags
     before_tag = new_content.split(start_tag)[0]
     after_tag = new_content.split(end_tag)[1]
-    # Embed the data between the tags
 
     new_content = before_tag + start_tag + "\n" + formatted_constructor_data + "\n    " + end_tag + after_tag
 
@@ -103,7 +103,6 @@ if __name__ == "__main__":
     }
     formatted_output = format_json(input_data)
 
-    # Specify the file name where the content needs to be embedded
     filename = "../contracts/ZKGlimpse.sol"
 
     print(generate_contract_from_template(filename, input_data))
