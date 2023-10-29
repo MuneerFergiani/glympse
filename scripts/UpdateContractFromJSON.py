@@ -11,7 +11,7 @@ def format_json(input_json):
     masking_keys = input_json.get('MASKING_KEYS', [])
 
     formatted_data = f"""
-    MaskingKey[] public MaskingKeys
+    MaskingKey[] public MaskingKeys;
 
     // STUDY_NAME
     string constant STUDY_NAME = "{study_name}";
@@ -47,10 +47,10 @@ def format_json(input_json):
     for index, key in enumerate(masking_keys):
         key1 = key.get('PubKey_X', '0x100')
         key2 = key.get('PubKey_Y', '0x100')
-        declaration += f"    uint32[] ZKP{index};\n"
+        formatted_data += f"    uint32[] ZKP{index};\n"
         for subkey in key.get('ZKP', []):
-            declaration += f"    ZKP{index}.push(uint32({subkey}));\n"
-            usage += f'    MaskingKeys.push(MaskingKey(uint256({key1}), uint256({key1}), ZKP{index}));\n''
+            declaration += f"        ZKP{index}.push(uint32({subkey}));\n"
+            usage += f'        MaskingKeys.push(MaskingKey(uint256({key1}), uint256({key1}), ZKP{index}));\n'
 
     formatted_constructor_data = ""
     formatted_constructor_data += declaration
@@ -71,7 +71,7 @@ def generate_contract_from_template(filename, data_to_embed):
     before_tag = content.split(start_tag)[0]
     after_tag = content.split(end_tag)[1]
     # Embed the data between the tags
-    new_content = before_tag + start_tag + "\n" + formatted_constructor_data + "\n    " + end_tag + after_tag
+    new_content = before_tag + start_tag + "\n" + formatted_data + "\n    " + end_tag + after_tag
 
     start_tag = "/* START CONSTRUCTOR INFORMATION */"
     end_tag = "/* END CONSTRUCTOR INFORMATION */"
@@ -80,6 +80,8 @@ def generate_contract_from_template(filename, data_to_embed):
     before_tag = new_content.split(start_tag)[0]
     after_tag = new_content.split(end_tag)[1]
     # Embed the data between the tags
+
+    new_content = before_tag + start_tag + "\n" + formatted_constructor_data + "\n    " + end_tag + after_tag
 
     return new_content
 
