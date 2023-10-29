@@ -229,7 +229,7 @@ export default function NewStudy({ children }: { children: ReactNode }) {
                       />
                     </FormControl>
                     <FormDescription>
-                      This is the hyposthesis of your study.
+                      This is the hypothesis of your study.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
