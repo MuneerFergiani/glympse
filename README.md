@@ -56,8 +56,9 @@ Furthermore, Glimpse mandates that researchers publish their methodology and hyp
 
 There are very many addressable limitations to this demo implementation of Glimpse.
 
-- Proper EdDSA with deterministic signatures are not implemented, producing cryptographic vulnerabilities. We are presently working on implementing proper SecP256k1 EdDSA within Noir.
+- Proper EdDSA with deterministic signatures are not implemented, but we couldn't use ECDSA due to cryptographic vulnerabilities in this setting. We are presently working on implementing proper SecP256k1 EdDSA within Noir. The beta crate is referenced in the ZK circuits.
 - This version mints a new smart-contract for each study and only after the threshold public keys have been selected by the server. This could be simplified, more could be moved on chain and data could be handled more efficiently.
+- There is a mismatch between the inputs the ZK verifier needs and what is being passed by the smart contract since we moved away from ECDSA.
 - It is possible to implement an m-of-n scheme, whereby not everybody needs to vote for the result to be published.
 - The monetisation of surveys and studies is not yet complete.
 - The responses are currently limited to yes and no answers.
