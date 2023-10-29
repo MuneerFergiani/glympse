@@ -78,7 +78,7 @@ export const studyProposalTagRelations = relations(
 // study proposal participant model and relations
 export const studyProposalParticipant = sqliteTable("study_participant", {
   id: integer("id").primaryKey(),
-  participant_account_id: integer("participant_account_id")
+  participantAccountId: integer("participant_account_id")
     .notNull()
     .references(() => account.id),
   studyProposalId: integer("study_proposal_id")
@@ -89,7 +89,7 @@ export const studyProposalParticipantRelations = relations(
   studyProposalParticipant,
   ({ one }) => ({
     account: one(account, {
-      fields: [studyProposalParticipant.participant_account_id],
+      fields: [studyProposalParticipant.participantAccountId],
       references: [account.id],
     }),
     studyProposal: one(studyProposal, {

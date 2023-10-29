@@ -17,6 +17,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { z } from "zod";
+import { useLoginStore } from "@/store/login";
+import { useFieldArray, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { useRouter } from "next/router";
 
 export const getServerSideProps: GetServerSideProps<HomeProps> = async (
   context,
@@ -105,6 +120,7 @@ const Home: LayoutPage = () => {
   );
 };
 
+// JOIN STUDY FORM
 function JoinStudyForm({
   study,
 }: {
@@ -114,7 +130,10 @@ function JoinStudyForm({
     studyDescription: string;
     studyHypothesis: string;
     dataAnalysisMethod: string;
-    questions: string[];
+    questions: {
+      id: number;
+      question: string;
+    }[];
     minimumParticipants: number;
     maximumParticipants: number;
     createdUnixTimestamp: number;
@@ -123,14 +142,35 @@ function JoinStudyForm({
     proposingAccountId: number;
   };
 }) {
-  // control the open/close state
+  // hooks
   const [open, setOpen] = useState(false);
+  const { loginState } = useLoginStore();
+  const useJoinStudy = trpc.joinStudy.useMutation();
+  const router = useRouter();
+
+  // handle cancel
+  function onCancel() {
+    setOpen(false);
+  }
+
+  // handle submitting
+  async function onJoin() {
+    // send to server
+    useJoinStudy.mutate({
+      account: (loginState.loggedIn && loginState.account) || "",
+      studyProposalId: study.id,
+    });
+
+    // on success
+    setOpen(false);
+    router.reload();
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       {/* Card button */}
       <DialogTrigger asChild>
-        <Card className="flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
           <div className="flex justify-between items-center w-full h-fit ">
             <h3 className="text-lg font-medium">{study.studyName}</h3>
             <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
@@ -161,7 +201,192 @@ function JoinStudyForm({
               {Math.floor(
                 (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
               )}{" "}
-              Hours To Confirm
+              Hours To Join
+            </Badge>
+          </div>
+        </Card>
+      </DialogTrigger>
+
+      <DialogContent className="max-h-[calc(100%-32px)] sm:max-w-[calc(100%-128px)] flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Join a Study</DialogTitle>
+          <DialogDescription>
+            Here is the details of the study you will be joining
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden">
+          <div className="flex-1 flex flex-col gap-8 min-h-0 overflow-auto">
+            <div>
+              <h3 className="text-lg">
+                <b>Study:</b> <i>{study.studyName}</i>
+              </h3>
+              <div className="flex gap-4 text-muted-foreground text-sm">
+                <p>
+                  N = {study.minimumParticipants} to {study.maximumParticipants}
+                </p>
+                <p>
+                  Created: {new Date(study.createdUnixTimestamp).toDateString()}
+                </p>
+                <p>
+                  Expiring in{" "}
+                  {Math.floor(
+                    (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
+                  )}{" "}
+                  hours
+                </p>
+              </div>
+              <p className="mt-1">{study.studyDescription}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Hypothesis</h3>
+              <p className="mt-1">{study.studyHypothesis}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Data Analysis Method</h3>
+              <p className="mt-1">{study.dataAnalysisMethod}</p>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Questions</h3>
+              {study.questions.map((q, i) => (
+                <p key={i} className="mt-1">
+                  {q.question}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex gap-2 justify-center">
+            <Button
+              type="button"
+              onClick={onCancel}
+              variant="outline"
+              className="w-64"
+            >
+              Cancel
+            </Button>
+            <Button onClick={onJoin} className="w-64">
+              Join
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// SUBMIT ANSWER FUNCTIONS
+const sumbitAnswersSchema = z.object({
+  participantAccount: z.string().min(3),
+  proposedStudyId: z.number(),
+  answers: z
+    .array(
+      z.object({
+        proposedStudyQuestionId: z.number(),
+        question: z.string(),
+        result: z.boolean(),
+      }),
+    )
+    .min(1),
+});
+function SubmitAnswersForm({
+  study,
+}: {
+  study: {
+    id: number;
+    studyName: string;
+    studyDescription: string;
+    studyHypothesis: string;
+    dataAnalysisMethod: string;
+    questions: {
+      id: number;
+      question: string;
+    }[];
+    minimumParticipants: number;
+    maximumParticipants: number;
+    createdUnixTimestamp: number;
+    expiryUnixTimestamp: number;
+    tags: string[];
+    proposingAccountId: number;
+  };
+}) {
+  // control the open/close state
+  const [open, setOpen] = useState(false);
+
+  // form state
+  const { loginState } = useLoginStore();
+  const form = useForm<z.infer<typeof sumbitAnswersSchema>>({
+    resolver: zodResolver(sumbitAnswersSchema),
+    defaultValues: {
+      participantAccount: (loginState.loggedIn && loginState.account) || "",
+      proposedStudyId: study.id,
+      answers: study.questions.map((q) => ({
+        proposedStudyQuestionId: q.id,
+        question: q.question,
+        result: false,
+      })),
+    },
+  });
+
+  // answers array
+  const answersArray = useFieldArray({
+    control: form.control,
+    name: "answers",
+  });
+
+  // handle cancel
+  function onCancel() {
+    form.reset();
+    setOpen(false);
+  }
+
+  // handle submitting
+  async function onSubmit(values: z.infer<typeof sumbitAnswersSchema>) {
+    // send to server
+    console.log(values);
+
+    // on success
+    form.reset();
+    setOpen(false);
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {/* Card button */}
+      <DialogTrigger asChild>
+        <Card className="cursor-pointer flex flex-col gap-4 min-w-fit h-fit pt-3 pb-5 px-5 bg-secondary shadow-md">
+          <div className="flex justify-between items-center w-full h-fit ">
+            <h3 className="text-lg font-medium">{study.studyName}</h3>
+            <ChevronRightIcon className="w-7 h-7 stroke-muted-foreground" />
+          </div>
+          <p>{study.studyDescription}</p>
+          <div className="flex w-full min-w-fit h-6 gap-2">
+            {study.tags?.[0] ? (
+              <Badge className="bg-orange-400 hover:bg-orange-400">
+                {study.tags[0]}
+              </Badge>
+            ) : null}
+            {study.tags?.[1] ? (
+              <Badge className="bg-purple-500 hover:bg-purple-500">
+                {study.tags[1]}
+              </Badge>
+            ) : null}
+            {study.tags?.[2] ? (
+              <Badge className="g-blue-600 hover:bg-blue-600">
+                {study.tags[2]}
+              </Badge>
+            ) : null}
+
+            {/* Separator */}
+            <span className="flex-1" />
+
+            <Badge className="min-w-fit" variant="destructive">
+              <AlarmClockIcon className="w-4 mr-2" />
+              {Math.floor(
+                (study.expiryUnixTimestamp - Date.now()) / (1000 * 60 * 60),
+              )}{" "}
+              Hours To Join
             </Badge>
           </div>
         </Card>
@@ -170,9 +395,65 @@ function JoinStudyForm({
         <DialogHeader>
           <DialogTitle>Join a Study</DialogTitle>
           <DialogDescription>
-            To join this study, you need to first fill out a few things
+            To join this study, you need to first answer these questions
           </DialogDescription>
         </DialogHeader>
+
+        <Form {...form}>
+          <form
+            className="flex-1 flex flex-col gap-4 overflow-hidden"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
+            <div className="flex-1 flex flex-col gap-8 min-h-0 overflow-auto">
+              {/* Questions (and answers) */}
+              <FormField
+                control={form.control}
+                name="answers"
+                render={({ field }) => (
+                  <FormItem>
+                    {answersArray.fields.map((item, index) => (
+                      <FormField
+                        key={item.id}
+                        control={form.control}
+                        // @ts-ignore
+                        name={`answers[${index}].result`}
+                        defaultValue={false}
+                        render={(props) => (
+                          <FormItem className="flex items-center justify-between">
+                            <FormLabel>{item.question}</FormLabel>
+                            <FormControl>
+                              <Switch
+                                // @ts-ignore
+                                checked={props.field.value}
+                                onCheckedChange={props.field.onChange}
+                              />
+                            </FormControl>
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-2 justify-center">
+              <Button
+                type="button"
+                onClick={onCancel}
+                variant="outline"
+                className="w-64"
+              >
+                Cancel
+              </Button>
+              <Button type="submit" className="w-64">
+                Submit
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );
