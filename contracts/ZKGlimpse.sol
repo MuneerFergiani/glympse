@@ -17,6 +17,8 @@ contract zkGlimpse {
 
     /* START META INFORMATION */
 
+    MaskingKey[] public MaskingKeys;
+
     // STUDY_NAME
     string constant STUDY_NAME = "My Study";
 
@@ -26,11 +28,11 @@ contract zkGlimpse {
     // HYPOTHESIS_DESC
     string constant HYPOTHESIS_DESC = "Hypothesis of study.";
 
-    // PARTICIPANT_MERKLE_ROOT
-    uint256 constant PARTICIPANT_MERKLE_ROOT = 0x00000000;
-
     // ANALYSIS_DESC
     string constant ANALYSIS_DESC = "Analysis description.";
+
+    // PARTICIPANT_MERKLE_ROOT
+    uint256 constant PARTICIPANT_MERKLE_ROOT = 0x000000000000000000000000;
 
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = 1635551999;
@@ -40,8 +42,6 @@ contract zkGlimpse {
     uint32[] ZKP0;
     uint32[] ZKP1;
 
-    MaskingKey[] public MaskingKeys ;
-
     /* END META INFORMATION */
 
     bytes32 merkleRoot;
@@ -50,18 +50,18 @@ contract zkGlimpse {
     constructor(bytes32 _merkleRoot, address _verifier) {
         merkleRoot = _merkleRoot;
         verifier = UltraVerifier(_verifier);
-        
-        // QUESTIONS
-        BinaryQuestions.push(BinaryQuestion("Question 1?"));
-        BinaryQuestions.push(BinaryQuestion("Question 2?"));
-        
-        // MASKING_KEYS
+
+        /* START CONSTRUCTOR INFORMATION */
         ZKP0.push(uint32(0x100));
         ZKP0.push(uint32(0x100));
         ZKP1.push(uint32(0x100));
         ZKP1.push(uint32(0x100));
-        MaskingKeys.push( MaskingKey(uint256(0x100), uint256(0x100), ZKP0));
+        MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP0));
+        MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP0));
         MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
+        MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
+
+    /* END CONSTRUCTOR INFORMATION */
     }
 
     function preparePublicInputs(
