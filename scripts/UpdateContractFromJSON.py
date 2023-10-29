@@ -31,16 +31,7 @@ def format_json(input_json):
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = {voting_deadline};
 
-    // QUESTIONS
-    BinaryQuestion[] public BinaryQuestions = [\n"""
-
-    for index, question in enumerate(binary_questions):
-        if index == len(binary_questions) - 1:
-            formatted_data += f'        BinaryQuestion("{question}")\n'
-        else:
-            formatted_data += f'        BinaryQuestion("{question}"),\n'
-    
-    formatted_data += f"    ];\n\n"
+    //\n"""
 
     declaration = ""
     usage = ""
@@ -55,6 +46,9 @@ def format_json(input_json):
     formatted_constructor_data = ""
     formatted_constructor_data += declaration
     formatted_constructor_data += usage
+
+    for index, question in enumerate(binary_questions):
+        formatted_constructor_data += f'\n        BinaryQuestions.push(BinaryQuestion("{question}"));'
 
     return formatted_data, formatted_constructor_data
     

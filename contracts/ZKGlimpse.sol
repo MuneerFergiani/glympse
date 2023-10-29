@@ -1,5 +1,9 @@
 pragma solidity >=0.8.19;
 
+/* This contract records true votes onto the blockchain and also stores the meta-information related 
+   to the study. As of currently, a new contract is minted for every study. This is not strictly
+   necessary, but this compromise has been forced onto us due to time constraints. */
+
 import {UltraVerifier} from "../circuits/contract/circuit/plonk_vk.sol";
 
 contract zkGlimpse {
@@ -37,12 +41,7 @@ contract zkGlimpse {
     // VOTING_VOTING_DEADLINE
     uint constant VOTING_DEADLINE = 1635551999;
 
-    // QUESTIONS
-    BinaryQuestion[] public BinaryQuestions = [
-        BinaryQuestion("Question 1?"),
-        BinaryQuestion("Question 2?")
-    ];
-
+    //
     uint32[] ZKP0;
     uint32[] ZKP1;
 
@@ -65,6 +64,8 @@ contract zkGlimpse {
         MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
         MaskingKeys.push(MaskingKey(uint256(0x100), uint256(0x100), ZKP1));
 
+        BinaryQuestions.push(BinaryQuestion("Question 1?"));
+        BinaryQuestions.push(BinaryQuestion("Question 2?"));
     /* END CONSTRUCTOR INFORMATION */
     }
 
@@ -85,7 +86,7 @@ contract zkGlimpse {
 
     function verifyResponse(
         bytes calldata proof,
-        bytes32[] calldata unhashed_partial_decryption_key, //64 bytes
+        bytes32[] calldata unhashed_partial_decryption_key, // 64 bytes
         bytes32[] calldata responseValue, // 8 bytes
         bytes32 nullifierHash
     ) public returns (bool) {
