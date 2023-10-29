@@ -3,6 +3,7 @@
    This code relies on our own eddsa_secp256k1_sha256 crate, which is not yet public. I have commented out a functioning ECDSA implementation, which is functioning. */
 
 use dep::std;
+use dep::teamglympse;
 
 fn main(
     voter_id: pub [Field; 3],		// The voter ID a generated signature, which corresponds to a public nonce. It works in conjunction with the nonce to prevent duplicate proofs: they're ID'd but not traceable to the owner.
@@ -27,10 +28,10 @@ fn main(
         y[i] = y_bytes[i];
     }
 
-    let is_message_verified = std::eddsa_secp256_sha256::verify_signature(x, y, sig[0], sig[1], sig[2], hashed_message);
+    let is_message_verified = teamglympse::eddsa_secp256_sha256::verify_signature(x, y, sig[0], sig[1], sig[2], hashed_message);
     assert(is_message_verified);
 
-    let is_signer_id_valid = std::eddsa::eddsa_secp256_sha256(pubkey_x, pubkey_y, voter_id[0], voter_id[1], voter_id[2], nonce);
+    let is_signer_id_valid = teamglympse::eddsa::eddsa_secp256_sha256(pubkey_x, pubkey_y, voter_id[0], voter_id[1], voter_id[2], nonce);
     assert(is_signer_id_valid);
 
     let merkle_node = std::hash::pedersen([pubkey_x, pubkey_y]);
